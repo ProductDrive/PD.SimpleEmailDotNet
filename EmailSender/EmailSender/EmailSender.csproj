@@ -1,0 +1,25 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>netstandard2.1</TargetFramework>
+    <RootNamespace>PD.EmailSender.Helpers</RootNamespace>
+    <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
+    <PackageLicenseExpression>MIT</PackageLicenseExpression>
+    <PackageId>PD.EmailSender.Helpers.SenderLib</PackageId>
+    <Authors>ProductDrive</Authors>
+    <Product>Product Drive Email Sender</Product>
+    <Description>An open source outbound-only email services</Description>
+    <Copyright>2023</Copyright>
+    <PackageProjectUrl>https://productdrive.com.ng</PackageProjectUrl>
+    <PackageTags>EmailSender Email Productdrive</PackageTags>
+    <RepositoryUrl>https://github.com/ProductDrive/PD.SimpleEmailDotNet</RepositoryUrl>
+    <PackageReleaseNotes>Send your email with ease</PackageReleaseNotes>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="MailKit" Version="3.6.0" />
+    <PackageReference Include="Microsoft.AspNetCore.Http" Version="2.2.2" />
+    <PackageReference Include="MimeKit" Version="3.6.0" />
+  </ItemGroup>
+
+</Project>
