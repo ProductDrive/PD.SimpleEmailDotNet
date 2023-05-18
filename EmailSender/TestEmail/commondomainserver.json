@@ -1,0 +1,22 @@
+[
+  {
+    "ServiceName": "gmail",
+    "ServerType": "smtp",
+    "Domain": "smtp.gmail.com",
+    "Ports": [
+      587,
+      465
+    ]
+  },
+ 
+  {
+    "ServiceName": "yahoo",
+    "ServerType": "smtp",
+    "Domain": "smtp.mail.yahoo.com",
+    "Ports": [
+      587,
+      465
+    ]
+  }
+ 
+]

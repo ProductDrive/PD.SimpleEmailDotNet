@@ -6,7 +6,7 @@ using System.Text;
 
 namespace PD.EmailSender.Helpers.Model
 {
-    public class MessageWithAttachmentViewModel
+    public class MessageModel
     {
         public string Subject { get; set; }
         public string Message { get; set; }
@@ -16,8 +16,8 @@ namespace PD.EmailSender.Helpers.Model
         public string[] EmailAddresses { get; set; }
         public string[] Bcc { get; set; }
         public string[] Cc { get; set; }
+        public string ReplyTo { get; set; }
         public string EmailDisplayName { get; set; }
-        public string SenderEmail { get; set; }
         public string User { get; set; }
     }
 }

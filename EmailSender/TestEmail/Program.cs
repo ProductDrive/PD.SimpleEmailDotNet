@@ -1,7 +1,9 @@
-﻿using PD.EmailSender.Helpers;
+﻿using Newtonsoft.Json;
+using PD.EmailSender.Helpers;
 using PD.EmailSender.Helpers.Model;
 using System;
 using System.Collections.Generic;
+using System.IO;
 
 namespace TestEmail
 {
@@ -9,19 +11,49 @@ namespace TestEmail
     {
         static void Main(string[] args)
         {
-            EmailEngine engine = new EmailEngine();
-            var ss = new MessagingViewModel
+            //string htmlBody;
+            //using (var streamReader = File.OpenText("C:/Users/Public/Documents/PD.SimpleEmailDotNet/EmailSender/TestEmail/sampletemplate.html"))
+            //{
+            //    htmlBody = streamReader.ReadToEnd();
+            //}
+
+            //var initialJson = File.ReadAllText($"C:/Users/Public/Documents/PD.SimpleEmailDotNet/EmailSender/TestEmail/json1.json"); //$"./Data/{file}.json" || C:\Users\Public\Documents\cdalevyappbackend\CDALevyApp\
+            //if (initialJson.Length > 15)
+            //{
+            //    List<HTMLTemplate> entityList = JsonConvert.DeserializeObject<List<HTMLTemplate>>(initialJson);
+                
+            //}
+
+            var ss = new MessageModel
             {
-                EmailAddress = "afeexclusive@gmail.com",
-                Contacts = new List<ContactsViewModel>() { new ContactsViewModel() { Email = "adeoyetemitayo99@gmail.com", Name = "Tayo" } },
-                Message = "Hello world from here",
+                EmailAddresses = new string[] { "adeoyetemitayo99@gmail.com" }, //"afeexclusive@gmail.com"
+                Bcc = new string[] { "adeoyetemitayo99@yahoo.com" },
+                Cc = new string[] { "afeexclusive@gmail.com" },
                 EmailDisplayName = "Afe Personal",
                 Subject = "Testing Email"
             };
-            var res = engine.SendSingleEmailAsync(ss);
+
+            //"productdrive.com.ng", 465, true
+            // "afee@productdrive.com.ng", "Afe@#40re_0"
+            //"admin@projectdriveng.com.ng", "nimda9876@Elo"
+            //mail.projectdriveng.com.ng`
+
+            //var aa = SendMail.SendSingleEmail(ss, "templateone").Result;
+            //var bb = SendMail.AuthenticateSenderDomain("afee@productdrive.com.ng", "Afe@#40re_0", "productdrive.com.ng", 465);
+            var initialJson = File.ReadAllText($"C:/Users/Public/Documents/PD.SimpleEmailDotNet/EmailSender/TestEmail/commondomainserver.json");
+            //var bb = SendMail.AuthenticateSenderDomain("admin@projectdriveng.com.ng", "nimda9876@Elo", initialJson);
+            //var bb = SendMail.AuthenticateSenderDomain("afee@productdrive.com.ng", "Afe@#40re_0", initialJson);
+            var bb = SendMail.AuthenticateSenderDomain("afee@productdrive.com.ng", "Afe@#40re_0", "productdrive.com.ng");
+            //var res = EmailEngine.SendEmail(ss);
 
 
-            Console.WriteLine($"Hello World! {res}");
+            Console.WriteLine($"Hurray you are connected! {bb}");
         }
+    }
+
+    public class HTMLTemplate
+    {
+        public string templatename { get; set; }
+        public string thehtml { get; set; }
     }
 }
