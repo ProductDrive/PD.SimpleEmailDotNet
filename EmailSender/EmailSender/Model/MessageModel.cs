@@ -19,5 +19,11 @@ namespace PD.EmailSender.Helpers.Model
         public string ReplyTo { get; set; }
         public string EmailDisplayName { get; set; }
         public string User { get; set; }
+
+        public string FacebookLink { get; set; }
+        public string TwitterLink { get; set; }
+        public string CompanyLogoLink { get; set; }
+        public string CopyrightName { get; set; }
+        public string CopyrightYear { get; set; }
     }
 }

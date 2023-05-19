@@ -19,27 +19,52 @@ namespace PD.EmailSender.Helpers
 
         public static async Task<bool> SendSingleEmail(MessageModel msgModel, SenderSettings sender, string templateName)
         {
-            var client = InitializeHttpClient();
-            var httpResponse = await client.GetAsync($"https://cdacollections.projectdriveng.com.ng/api/Job?filename={templateName}"); //https://cdacollections.projectdriveng.com.ng/api/Job?filename=templateone
-            if (httpResponse.IsSuccessStatusCode)
+            try
             {
-                var result = JsonConvert.DeserializeObject<ResponseModel>(await httpResponse.Content.ReadAsStringAsync());
-                msgModel.Message = result.ReturnObj.ToString();
+                HttpClient client = InitializeHttpClient();
+                string url = $"https://cdacollections.projectdriveng.com.ng/api/Job?filename={templateName}";
+                HttpResponseMessage httpResponse = await client.GetAsync(url);
+                if (httpResponse.IsSuccessStatusCode)
+                {
+                    var result = JsonConvert.DeserializeObject<ResponseModel>(await httpResponse.Content.ReadAsStringAsync());
+                    string rawMsg = result.ReturnObj.ToString();
+
+                    msgModel.Message = RefineTemplateMessage(rawMsg, msgModel);
+                }
+                return EmailEngine.SendEmail(msgModel, sender);
             }
-            return EmailEngine.SendEmail(msgModel, sender);
+            catch (Exception ex)
+            {
+
+                throw;
+            }
         }
+
+        private static string RefineTemplateMessage(string htmlTemplate, MessageModel msg)
+        {
+            //Social Media
+            var newdoc = htmlTemplate.Replace("#facebooklink#", msg.FacebookLink);
+            newdoc = newdoc.Replace("#twitterlink#", msg.TwitterLink);
+
+            //Copyright
+            newdoc = newdoc.Replace("#Someone#", msg.CopyrightName);
+            newdoc = newdoc.Replace("#year#", msg.CopyrightYear);
+            newdoc = newdoc.Replace("#companylogo#", msg.CompanyLogoLink);
+            return newdoc;
+        }
+
 
         private static async Task<SenderSettings> CheckIfAuthenticated(string email)
         {
             HttpClient client = InitializeHttpClient();
-            HttpResponseMessage httpResponse = await client.GetAsync($"https://cdacollections.projectdriveng.com.ng/api/Jobmysendersettings?email={email}");
+            HttpResponseMessage httpResponse = await client.GetAsync($"https://cdacollections.projectdriveng.com.ng/api/Job/mysendersettings?email={email}");
             if (!httpResponse.IsSuccessStatusCode)
             {
                 return null;
             }
 
             ResponseModel result = JsonConvert.DeserializeObject<ResponseModel>(await httpResponse.Content.ReadAsStringAsync());
-            SenderSettings res = JsonConvert.DeserializeObject<SenderSettings>(result.ReturnObj.ToString()); 
+            SenderSettings res = JsonConvert.DeserializeObject<SenderSettings>(JsonConvert.SerializeObject(result.ReturnObj)); 
             return res;
         }
 
@@ -73,12 +98,12 @@ namespace PD.EmailSender.Helpers
                     foreach (var item in authenticatedSettings)
                     {
                         string url = $"https://cdacollections.projectdriveng.com.ng/api/job/postemailsettings?domain={item.Domain}&port={item.Port}&email={item.Email}&pass={item.Passord}";
-                        await client.GetAsync(url);
+                        var httpres = await client.GetAsync(url);
                     }
                     return (true, authenticatedSettings[0]);
                 }
             }
-            catch (Exception)
+            catch (Exception ex)
             {
                 return (false, null);
             }
