@@ -350,4 +350,3 @@ MigrationBackup/
 .ionide/
 
 # Private Files
-EmailEngine.cs
