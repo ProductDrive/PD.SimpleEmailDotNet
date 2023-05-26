@@ -10,14 +10,20 @@ using System.Threading.Tasks;
 
 namespace PD.EmailSender.Helpers
 {
-    public class SendMail
+    public static class SendMail
     {
+        public static List<bool> SendMultipleEmail(List<MessageModel> msgModel, SenderSettings sender)
+        {
+            var res = EmailEngine.SendMultipleEmail(msgModel, sender);
+            return res;
+        }
+
         public static bool SendSingleEmail(MessageModel msgModel, SenderSettings sender)
         {
             return EmailEngine.SendEmail(msgModel, sender);
         }
 
-        public static async Task<bool> SendSingleEmail(MessageModel msgModel, SenderSettings sender, string templateName)
+        public static async Task<bool> SendSingleEmailAsync(MessageModel msgModel, SenderSettings sender, string templateName)
         {
             try
             {
@@ -26,7 +32,7 @@ namespace PD.EmailSender.Helpers
                 HttpResponseMessage httpResponse = await client.GetAsync(url);
                 if (httpResponse.IsSuccessStatusCode)
                 {
-                    var result = JsonConvert.DeserializeObject<ResponseModel>(await httpResponse.Content.ReadAsStringAsync());
+                    ResponseModel result = JsonConvert.DeserializeObject<ResponseModel>(await httpResponse.Content.ReadAsStringAsync());
                     string rawMsg = result.ReturnObj.ToString();
 
                     msgModel.Message = RefineTemplateMessage(rawMsg, msgModel);
@@ -39,7 +45,56 @@ namespace PD.EmailSender.Helpers
                 throw;
             }
         }
+              
+        public static async Task<(bool IsAuthenticated, SenderSettings Settings)> AuthenticateSenderDomain(string emailaddress, string password, string domain = "", int port = 0)
+        {
+            try
+            {
+                SenderSettings existingRec = await CheckIfAuthenticated(emailaddress);
+                if (existingRec != null)
+                {
+                    if (string.IsNullOrWhiteSpace(existingRec.Passord))
+                    {
+                        return (false, null);
+                    }
+                    return (true, existingRec);
+                }
 
+                List<CommonHosts> commonHosts = new List<CommonHosts>();
+                //recieve json from API
+                var client = InitializeHttpClient();
+                var httpResponse = await client.GetAsync($"https://cdacollections.projectdriveng.com.ng/api/job/defaultdomains");
+                if (httpResponse.IsSuccessStatusCode)
+                {
+                    ResponseModel result = JsonConvert.DeserializeObject<ResponseModel>(await httpResponse.Content.ReadAsStringAsync());
+                    List<CommonHosts> hosts = JsonConvert.DeserializeObject<List<CommonHosts>>(result.ReturnObj.ToString());
+                    commonHosts.AddRange(hosts);
+                }
+
+                List<SenderSettings> authenticatedSettings = EmailEngine.AuthenticateSender(emailaddress, password, commonHosts, domain, port);
+                //Save authenticated settings to host site(db or json)
+                if (authenticatedSettings?.Any() ?? false)
+                {
+                    foreach (var item in authenticatedSettings)
+                    {
+                        string url = $"https://cdacollections.projectdriveng.com.ng/api/job/postemailsettingsobj";
+                        item.Passord = EncryptPassword(item.Passord);
+                        string serialized = JsonConvert.SerializeObject(item);
+                        StringContent content = new StringContent(serialized, Encoding.UTF8, "application/json");
+                        using (var httpres = await client.PostAsync(url, content)) { };
+                    }
+                    return (true, authenticatedSettings[0]);
+                }
+            }
+            catch (Exception ex)
+            {
+                return (false, null);
+            }
+
+            return (false, null);
+        }
+
+        #region Private Method
         private static string RefineTemplateMessage(string htmlTemplate, MessageModel msg)
         {
             //Social Media
@@ -64,52 +119,13 @@ namespace PD.EmailSender.Helpers
             }
 
             ResponseModel result = JsonConvert.DeserializeObject<ResponseModel>(await httpResponse.Content.ReadAsStringAsync());
-            SenderSettings res = JsonConvert.DeserializeObject<SenderSettings>(JsonConvert.SerializeObject(result.ReturnObj)); 
+            SenderSettings res = JsonConvert.DeserializeObject<SenderSettings>(JsonConvert.SerializeObject(result.ReturnObj));
+            if(res != null)
+                res.Passord = DecryptPassword(res.Passord);
+
             return res;
         }
 
-        public static async Task<(bool IsAuthenticated, SenderSettings Settings)> AuthenticateSenderDomain(string emailaddress, string password, string domain = "", int port = 0)
-        {
-            try
-            {
-                SenderSettings existingRec = await CheckIfAuthenticated(emailaddress);
-                if (existingRec != null)
-                {
-                    return (true, existingRec);
-                }
-
-                List<CommonHosts> commonHosts = new List<CommonHosts>();
-                //recieve json from API
-                var client = InitializeHttpClient();
-                var httpResponse = await client.GetAsync($"https://cdacollections.projectdriveng.com.ng/api/job/defaultdomains");
-                if (httpResponse.IsSuccessStatusCode)
-                {
-                    var result = JsonConvert.DeserializeObject<ResponseModel>(await httpResponse.Content.ReadAsStringAsync());
-                    var hosts = JsonConvert.DeserializeObject<List<CommonHosts>>(result.ReturnObj.ToString());
-                    commonHosts.AddRange(hosts);
-                }
-
-
-                List<SenderSettings> authenticatedSettings = EmailEngine.AuthenticateSender(emailaddress, password, commonHosts, domain, port);
-                //Save authenticated settings to host site(db or json)
-                if (authenticatedSettings?.Any() ?? false)
-                {
-
-                    foreach (var item in authenticatedSettings)
-                    {
-                        string url = $"https://cdacollections.projectdriveng.com.ng/api/job/postemailsettings?domain={item.Domain}&port={item.Port}&email={item.Email}&pass={item.Passord}";
-                        var httpres = await client.GetAsync(url);
-                    }
-                    return (true, authenticatedSettings[0]);
-                }
-            }
-            catch (Exception ex)
-            {
-                return (false, null);
-            }
-
-            return (false, null);
-        }
 
         private static HttpClient InitializeHttpClient()
         {
@@ -121,23 +137,109 @@ namespace PD.EmailSender.Helpers
             return client;
         }
 
-        //public List<bool> SendMultipleEmailAsync(MessagingViewModel msgModel)
-        //{
-        //    List<bool> isSent = new List<bool>();
+        private static string EncryptPassword(string password)
+        {
+            char[] charModel = new char[] { 'A', 'a', 'B', 'b', 'C', 'c', 'D', 'd', 'E', 'e', 'F', 'f', 'G', 'g', 'H', 'h', 'I', 'i', 'J', 'j', 'K', 'k', 'L', 'l', 'M', 'm', 'N', 'n', 'O', 'o', 'P', 'p', 'Q', 'q', 'R', 'r', 'S', 's', 'T', 't', 'U', 'u', 'V', 'v', 'W', 'w', 'X', 'x', 'Y', 'y', 'Z', 'z', '0', '1', '2', '3', '4', '5', '6', '7', '8', '9', '$', '#', '*', '&', '{', '}', '[', ']', '–', '=', '.', '(', ')', ';', '+', '/' };
+            char[] reverseCharModel = new char[] { '/', '+', ';', ')', '(', '.', '=', '-', ']', '[', '}', '{', '&', '*', '#', '$', '9', '8', '7', '6', '5', '4', '3', '2', '1', '0', 'z', 'Z', 'y', 'Y', 'x', 'X', 'w', 'W', 'v', 'V', 'u', 'U', 't', 'T', 's', 'S', 'r', 'R', 'q', 'Q', 'p', 'P', 'o', 'O', 'n', 'N', 'm', 'M', 'l', 'L', 'k', 'K', 'j', 'J', 'i', 'I', 'h', 'H', 'g', 'G', 'f', 'F', 'e', 'E', 'd', 'D', 'c', 'C', 'b', 'B', 'a', 'A', };
 
-        //    List<ContactsViewModel> allcontacts = new List<ContactsViewModel>();
-        //    allcontacts.AddRange(msgModel.Contacts);
+            //====Encryption Algorithm========
+            //Generate 20 random characters
+            string randomstring = RandomStringGen(20);
 
-        //    foreach (var item in allcontacts)
-        //    {
-        //        msgModel.Contacts.Clear();
-        //        msgModel.Contacts.Add(item);
-        //        isSent.Add(SendSingleEmailAsync(msgModel));
-        //    }
+            //Loop the password
+            string passStr = "";
+            for (int i = 0; i < password.Length; i++)
+            {
+                char c = password[i];
+                // find the index of a character in the input string in the charModel array
+                int foundInd = Array.IndexOf(charModel, c);
+                if (foundInd > -1)
+                {
+                    // pick a character in the reversed array of the same index
+                    passStr = passStr + reverseCharModel[foundInd];
+                }
+                else
+                {
+                    // if the character is not found use user input string
+                    // replace @ with #PdR#
+                    if (c == '@')
+                    {
+                        passStr += "#PdR#";
+                    }
+                    else
+                    {
 
-        //    return isSent;
-        //}
+                        passStr = passStr + c;
+                    }
+                }
+            }
 
+            // the actual password will start from position 12 (productdrive.length)
+            string newString = randomstring.Insert(11, passStr);
+            // the length of the password will be the last 2 digits of the encryption
+            string passlen = password.Length > 9 ? password.Length.ToString() : $"0{password.Length}";
+            string trimmed = newString.Remove(newString.Length - 2, 2);
+            trimmed += passlen;
+            return trimmed;
+        }
+
+        private static string DecryptPassword(string enPass)
+        {
+            try
+            {
+                char[] charModel = new char[] { 'A', 'a', 'B', 'b', 'C', 'c', 'D', 'd', 'E', 'e', 'F', 'f', 'G', 'g', 'H', 'h', 'I', 'i', 'J', 'j', 'K', 'k', 'L', 'l', 'M', 'm', 'N', 'n', 'O', 'o', 'P', 'p', 'Q', 'q', 'R', 'r', 'S', 's', 'T', 't', 'U', 'u', 'V', 'v', 'W', 'w', 'X', 'x', 'Y', 'y', 'Z', 'z', '0', '1', '2', '3', '4', '5', '6', '7', '8', '9', '$', '#', '*', '&', '{', '}', '[', ']', '–', '=', '.', '(', ')', ';', '+', '/' };
+                char[] reverseCharModel = new char[] { '/', '+', ';', ')', '(', '.', '=', '-', ']', '[', '}', '{', '&', '*', '#', '$', '9', '8', '7', '6', '5', '4', '3', '2', '1', '0', 'z', 'Z', 'y', 'Y', 'x', 'X', 'w', 'W', 'v', 'V', 'u', 'U', 't', 'T', 's', 'S', 'r', 'R', 'q', 'Q', 'p', 'P', 'o', 'O', 'n', 'N', 'm', 'M', 'l', 'L', 'k', 'K', 'j', 'J', 'i', 'I', 'h', 'H', 'g', 'G', 'f', 'F', 'e', 'E', 'd', 'D', 'c', 'C', 'b', 'B', 'a', 'A', };
+
+                //=====Decryption Algorithm====
+                //------ replace #PdR# with @
+                string resEnPass = enPass.Replace("#PdR#", "@");
+                // Get the last 2 chars of the encrypted password and convert it to int
+                int passLen = Convert.ToInt32(resEnPass.Substring(resEnPass.Length - 2, 2));
+                // get the substring from position 12 to the number above
+                string hashStr = resEnPass.Substring(11, passLen);
+                // find the position of each char in the reversed array-- if the character can not be found use the coming character(it was not found during encryption)
+                //Loop the password
+                string passStr = "";
+                for (int i = 0; i < passLen; i++)
+                {
+                    char c = hashStr[i];
+                    // find the index of a character in the input string in the charModel array
+                    int foundInd = Array.IndexOf(reverseCharModel, c);
+                    if (foundInd > -1)
+                    {
+                        // pick a character in the reversed array of the same index
+                        passStr = passStr + charModel[foundInd];
+                    }
+                    else
+                    {
+                        // if the character is not found use user input string
+                        passStr = passStr + c;
+                    }
+                }
+                //In turn find the chars in the Model array
+                return passStr;
+            }
+            catch (Exception ex)
+            {
+                return "";
+            }
+        }
+
+        private static string RandomStringGen(int num)
+        {
+            string str = "abcdefghijklmnopqrstuvwxyz0123456789";
+            string randomstring = "";
+            Random res = new Random();
+            for (int i = 0; i < num; i++)
+            {
+                int x = res.Next(str.Length);
+                randomstring = randomstring + str[x];
+            }
+            return randomstring;
+        }
+
+
+        #endregion
 
     }
 

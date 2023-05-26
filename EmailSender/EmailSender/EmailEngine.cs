@@ -10,43 +10,29 @@ using System.Threading.Tasks;
 
 namespace PD.EmailSender.Helpers
 {
-    public class EmailEngine
+    public static class EmailEngine
     {
         public static bool SendEmail(MessageModel msgModel, SenderSettings sender)
         {
-            MimeMessage message = new MimeMessage();
-            BodyBuilder builder = new BodyBuilder();
-            if (msgModel.Attachments != null)
+            var msg = BuildEmailMessage(msgModel, sender.Email);
+            return SendReadyEmail(msg, sender);
+        }
+
+        public static List<bool> SendMultipleEmail(List<MessageModel> msgModel, SenderSettings sender)
+        {
+            List<MimeMessage> messages = new List<MimeMessage>();
+            foreach (var item in msgModel)
             {
-                foreach (var item in msgModel.Attachments)
-                {
-                    string fileName = item.FileName;
-                    Stream fileStream = item.OpenReadStream();
-                    builder.Attachments.Add(fileName, fileStream);
-
-                }
+                messages.Add(BuildEmailMessage(item, sender.Email));
             }
+            
 
-            if (msgModel.AttachmentInCode != null)
-            {
-                foreach (var item in msgModel.AttachmentInCode)
-                {
-                    string fileName = string.IsNullOrWhiteSpace(msgModel.Filename) ? $"PdDocs{msgModel.AttachmentInCode.FindIndex(x => x.Equals(item))}" : msgModel.Filename;
-                    builder.Attachments.Add(fileName, item);
+            Task<bool>[] tasks = messages.Select(message => Task<bool>.Factory.StartNew(() => SendReadyEmail(message, sender))).ToArray();
+            Task.WaitAll(tasks);
+            //then add the result of all the tasks to sentResult in a threadsafe fashion
+            List<bool> sentResult = tasks.Select(task => task.Result).ToList();
 
-                }
-            }
-
-            builder.HtmlBody = msgModel.Message;
-
-            message.Body = builder.ToMessageBody();
-            message.From.Add(new MailboxAddress(msgModel.EmailDisplayName, sender.Email));
-            message.ReplyTo.Add(new MailboxAddress(msgModel.EmailDisplayName, msgModel.ReplyTo ?? sender.Email));
-            msgModel.EmailAddresses?.ToList().ForEach(contact=> message.To.Add(MailboxAddress.Parse(contact)));
-            msgModel.Bcc?.ToList().ForEach(x => message.Bcc.Add(MailboxAddress.Parse(x)));
-            msgModel.Cc?.ToList().ForEach(x => message.Cc.Add(MailboxAddress.Parse(x)));
-            message.Subject = msgModel.Subject;
-            return SendReadyEmail(message, sender);
+            return sentResult;
         }
 
         public static List<SenderSettings> AuthenticateSender(string emailaddress, string password, List<CommonHosts> commonHosts, string domain = "", int port = 0)
@@ -121,6 +107,44 @@ namespace PD.EmailSender.Helpers
             return connectionList;
         }
 
+        private static MimeMessage BuildEmailMessage(MessageModel msgModel, string senderEmail)
+        {
+            MimeMessage message = new MimeMessage();
+            BodyBuilder builder = new BodyBuilder();
+            if (msgModel.Attachments != null)
+            {
+                foreach (var item in msgModel.Attachments)
+                {
+                    string fileName = item.FileName;
+                    Stream fileStream = item.OpenReadStream();
+                    builder.Attachments.Add(fileName, fileStream);
+
+                }
+            }
+
+            if (msgModel.AttachmentInCode != null)
+            {
+                foreach (var item in msgModel.AttachmentInCode)
+                {
+                    string fileName = string.IsNullOrWhiteSpace(msgModel.Filename) ? $"PdDocs{msgModel.AttachmentInCode.FindIndex(x => x.Equals(item))}" : msgModel.Filename;
+                    builder.Attachments.Add(fileName, item);
+
+                }
+            }
+
+            builder.HtmlBody = msgModel.Message;
+
+            message.Body = builder.ToMessageBody();
+            message.From.Add(new MailboxAddress(msgModel.EmailDisplayName, senderEmail));
+            message.ReplyTo.Add(new MailboxAddress(msgModel.EmailDisplayName, msgModel.ReplyTo ?? senderEmail));
+            msgModel.EmailAddresses?.ToList().ForEach(contact => message.To.Add(MailboxAddress.Parse(contact)));
+            msgModel.Bcc?.ToList().ForEach(x => message.Bcc.Add(MailboxAddress.Parse(x)));
+            msgModel.Cc?.ToList().ForEach(x => message.Cc.Add(MailboxAddress.Parse(x)));
+            message.Subject = msgModel.Subject;
+
+            return message;
+        }
+
         private static List<CommonHosts> AuthDetails(CommonHosts oneDetails)
         {
             List<CommonHosts> domainlist = new List<CommonHosts>();
@@ -147,7 +171,7 @@ namespace PD.EmailSender.Helpers
                 smtpClient.Authenticate(emailaddress, password);
                 return true;
             }
-            catch (Exception)
+            catch (Exception ex)
             {
                 return false;
             }
