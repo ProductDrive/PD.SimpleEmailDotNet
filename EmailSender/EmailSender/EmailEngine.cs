@@ -7,6 +7,7 @@ using System.Linq;
 using System.Text;
 using MailKit.Net.Smtp;
 using System.Threading.Tasks;
+using System.Security.Authentication;
 
 namespace PD.EmailSender.Helpers
 {
@@ -49,7 +50,7 @@ namespace PD.EmailSender.Helpers
                 };
                 bool isAuth = Authenticator(emailaddress, password, specified);
                 if (isAuth)
-                    return new List<SenderSettings>() { new SenderSettings { Domain = domain, Email = emailaddress, Passord = password, Port = port } };
+                    return new List<SenderSettings>() { new SenderSettings { Domain = domain, Email = emailaddress, Password = password, Port = port } };
 
 
                 return null;
@@ -99,7 +100,7 @@ namespace PD.EmailSender.Helpers
                         {
                             Domain = hostForAuth[i].Domain,
                             Email = emailaddress,
-                            Passord = password,
+                            Password = password,
                             Port = hostForAuth[i].Ports[0]
                         });
                 }
@@ -140,7 +141,7 @@ namespace PD.EmailSender.Helpers
             msgModel.EmailAddresses?.ToList().ForEach(contact => message.To.Add(MailboxAddress.Parse(contact)));
             msgModel.Bcc?.ToList().ForEach(x => message.Bcc.Add(MailboxAddress.Parse(x)));
             msgModel.Cc?.ToList().ForEach(x => message.Cc.Add(MailboxAddress.Parse(x)));
-            message.Subject = msgModel.Subject;
+            message.Subject = string.IsNullOrWhiteSpace(msgModel.Subject) ? "(no Subject)": msgModel.Subject;
 
             return message;
         }
@@ -167,7 +168,8 @@ namespace PD.EmailSender.Helpers
             SmtpClient smtpClient = new SmtpClient();
             try
             {
-                smtpClient.Connect(details.Domain, details.Ports.First(), true);
+
+                smtpClient.Connect(details.Domain, details.Ports.First(), false);
                 smtpClient.Authenticate(emailaddress, password);
                 return true;
             }
@@ -184,7 +186,7 @@ namespace PD.EmailSender.Helpers
             {
                 //projectdriveng.com.ng
                 smtpClient.Connect(sender.Domain, sender.Port, true);
-                smtpClient.Authenticate(sender.Email, sender.Passord);
+                smtpClient.Authenticate(sender.Email, sender.Password);
                 smtpClient.Send(message);
                 return true;
             }

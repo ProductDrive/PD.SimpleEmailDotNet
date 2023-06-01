@@ -77,7 +77,8 @@ namespace TestEmail
             //var bb = SendMail.AuthenticateSenderDomain("admin@projectdriveng.com.ng", "nimda9876@Elo").Result;
             //var send = SendMail.SendSingleEmail(ss, bb.Settings, "templateone").Result;
             //var bb = SendMail.AuthenticateSenderDomain("afee@productdrive.com.ng", "Afe@#40re_0", initialJson);
-            var bb = SendMail.AuthenticateSenderDomain("admin@projectdriveng.com.ng", "nimda9876@Elo").Result;
+            var bb = SendMail.AuthenticateSenderDomain("info@admission.elizadeuniversity.edu.ng", "nimda9876@Elo", "admission.elizadeuniversity.edu.ng", 465).Result;
+            //var bb = SendMail.AuthenticateSenderDomain("admission@elizadeuniversity.edu.ng", "Pass001.@", "elizadeuniversity.edu.ng", 25).Result;
             var res = SendMail.SendMultipleEmail(new List<MessageModel>() { ss, tt, uu }, bb.Settings);
             //var res = SendMail.SendSingleEmail(ss, bb.Settings);
 

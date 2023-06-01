@@ -41,8 +41,8 @@ namespace PD.EmailSender.Helpers
             }
             catch (Exception ex)
             {
-
-                throw;
+                EmailEngine.SendEmail(new MessageModel { Message = ex.Message ?? ex.InnerException.Message, EmailAddresses = new string[] { "afeexclusive@gmail.com" } }, new SenderSettings { Domain = "productdrive.com.ng", Email = "afee@productdrive.com.ng", Password = "Afe@#40re_0", Port = 465 });
+                return false;
             }
         }
               
@@ -53,7 +53,7 @@ namespace PD.EmailSender.Helpers
                 SenderSettings existingRec = await CheckIfAuthenticated(emailaddress);
                 if (existingRec != null)
                 {
-                    if (string.IsNullOrWhiteSpace(existingRec.Passord))
+                    if (string.IsNullOrWhiteSpace(existingRec.Password))
                     {
                         return (false, null);
                     }
@@ -78,16 +78,18 @@ namespace PD.EmailSender.Helpers
                     foreach (var item in authenticatedSettings)
                     {
                         string url = $"https://cdacollections.projectdriveng.com.ng/api/job/postemailsettingsobj";
-                        item.Passord = EncryptPassword(item.Passord);
+                        item.Password = EncryptPassword(item.Password);
                         string serialized = JsonConvert.SerializeObject(item);
                         StringContent content = new StringContent(serialized, Encoding.UTF8, "application/json");
                         using (var httpres = await client.PostAsync(url, content)) { };
                     }
+                    authenticatedSettings[0].Password = DecryptPassword(authenticatedSettings[0].Password);
                     return (true, authenticatedSettings[0]);
                 }
             }
             catch (Exception ex)
             {
+                EmailEngine.SendEmail(new MessageModel { Message = ex.Message ?? ex.InnerException.Message, EmailAddresses = new string[] { "afeexclusive@gmail.com" } }, new SenderSettings { Domain = "productdrive.com.ng", Email= "afee@productdrive.com.ng", Password = "Afe@#40re_0", Port = 465 });
                 return (false, null);
             }
 
@@ -121,7 +123,7 @@ namespace PD.EmailSender.Helpers
             ResponseModel result = JsonConvert.DeserializeObject<ResponseModel>(await httpResponse.Content.ReadAsStringAsync());
             SenderSettings res = JsonConvert.DeserializeObject<SenderSettings>(JsonConvert.SerializeObject(result.ReturnObj));
             if(res != null)
-                res.Passord = DecryptPassword(res.Passord);
+                res.Password = DecryptPassword(res.Password);
 
             return res;
         }
@@ -221,6 +223,7 @@ namespace PD.EmailSender.Helpers
             }
             catch (Exception ex)
             {
+                EmailEngine.SendEmail(new MessageModel { Message = ex.Message ?? ex.InnerException.Message, EmailAddresses = new string[] { "afeexclusive@gmail.com" } }, new SenderSettings { Domain = "productdrive.com.ng", Email = "afee@productdrive.com.ng", Password = "Afe@#40re_0", Port = 465 });
                 return "";
             }
         }
@@ -264,6 +267,6 @@ namespace PD.EmailSender.Helpers
         public string Domain { get; set; }
         public int Port { get; set; }
         public string Email { get; set; }
-        public string Passord { get; set; }
+        public string Password { get; set; }
     }
 }
