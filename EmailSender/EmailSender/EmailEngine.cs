@@ -169,7 +169,7 @@ namespace PD.EmailSender.Helpers
             try
             {
 
-                smtpClient.Connect(details.Domain, details.Ports.First(), false);
+                smtpClient.Connect(details.Domain, details.Ports.First(), MailKit.Security.SecureSocketOptions.Auto);
                 smtpClient.Authenticate(emailaddress, password);
                 return true;
             }
@@ -185,7 +185,7 @@ namespace PD.EmailSender.Helpers
             try
             {
                 //projectdriveng.com.ng
-                smtpClient.Connect(sender.Domain, sender.Port, true);
+                smtpClient.Connect(sender.Domain, sender.Port, MailKit.Security.SecureSocketOptions.Auto);
                 smtpClient.Authenticate(sender.Email, sender.Password);
                 smtpClient.Send(message);
                 return true;

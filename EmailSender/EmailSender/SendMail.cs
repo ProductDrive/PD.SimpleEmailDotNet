@@ -61,27 +61,31 @@ namespace PD.EmailSender.Helpers
                 }
 
                 List<CommonHosts> commonHosts = new List<CommonHosts>();
-                //recieve json from API
-                var client = InitializeHttpClient();
-                var httpResponse = await client.GetAsync($"https://cdacollections.projectdriveng.com.ng/api/job/defaultdomains");
-                if (httpResponse.IsSuccessStatusCode)
+                if (string.IsNullOrWhiteSpace(domain) && port == 0)
                 {
-                    ResponseModel result = JsonConvert.DeserializeObject<ResponseModel>(await httpResponse.Content.ReadAsStringAsync());
-                    List<CommonHosts> hosts = JsonConvert.DeserializeObject<List<CommonHosts>>(result.ReturnObj.ToString());
-                    commonHosts.AddRange(hosts);
+                    //recieve json from API
+                    HttpClient client = InitializeHttpClient();
+                    HttpResponseMessage httpResponse = await client.GetAsync($"https://cdacollections.projectdriveng.com.ng/api/job/defaultdomains");
+                    if (httpResponse.IsSuccessStatusCode)
+                    {
+                        ResponseModel result = JsonConvert.DeserializeObject<ResponseModel>(await httpResponse.Content.ReadAsStringAsync());
+                        List<CommonHosts> hosts = JsonConvert.DeserializeObject<List<CommonHosts>>(result.ReturnObj.ToString());
+                        commonHosts.AddRange(hosts);
+                    }
                 }
 
                 List<SenderSettings> authenticatedSettings = EmailEngine.AuthenticateSender(emailaddress, password, commonHosts, domain, port);
                 //Save authenticated settings to host site(db or json)
                 if (authenticatedSettings?.Any() ?? false)
                 {
+                    HttpClient client = InitializeHttpClient();
                     foreach (var item in authenticatedSettings)
                     {
                         string url = $"https://cdacollections.projectdriveng.com.ng/api/job/postemailsettingsobj";
                         item.Password = EncryptPassword(item.Password);
                         string serialized = JsonConvert.SerializeObject(item);
                         StringContent content = new StringContent(serialized, Encoding.UTF8, "application/json");
-                        using (var httpres = await client.PostAsync(url, content)) { };
+                        using (HttpResponseMessage httpres = await client.PostAsync(url, content)) { };
                     }
                     authenticatedSettings[0].Password = DecryptPassword(authenticatedSettings[0].Password);
                     return (true, authenticatedSettings[0]);
@@ -187,6 +191,10 @@ namespace PD.EmailSender.Helpers
 
         private static string DecryptPassword(string enPass)
         {
+            if (string.IsNullOrWhiteSpace(enPass))
+            {
+                return "";
+            }
             try
             {
                 char[] charModel = new char[] { 'A', 'a', 'B', 'b', 'C', 'c', 'D', 'd', 'E', 'e', 'F', 'f', 'G', 'g', 'H', 'h', 'I', 'i', 'J', 'j', 'K', 'k', 'L', 'l', 'M', 'm', 'N', 'n', 'O', 'o', 'P', 'p', 'Q', 'q', 'R', 'r', 'S', 's', 'T', 't', 'U', 'u', 'V', 'v', 'W', 'w', 'X', 'x', 'Y', 'y', 'Z', 'z', '0', '1', '2', '3', '4', '5', '6', '7', '8', '9', '$', '#', '*', '&', '{', '}', '[', ']', '–', '=', '.', '(', ')', ';', '+', '/' };
