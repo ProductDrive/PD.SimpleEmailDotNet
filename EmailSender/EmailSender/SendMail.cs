@@ -100,6 +100,56 @@ namespace PD.EmailSender.Helpers
             return (false, null);
         }
 
+        public static async Task<bool> SendMultipleEmailUsingHttpClient(List<MessageModel> msgModel, SenderSettings sender)
+        {
+            HttpClient client = InitializeHttpClient();
+            string url = $"https://cdacollections.projectdriveng.com.ng/api/job/sendmanyemail";
+            MultipleMessageObject item = new MultipleMessageObject { Messages =  msgModel, Settings = sender };
+           string serialized = JsonConvert.SerializeObject(item);
+            StringContent content = new StringContent(serialized, Encoding.UTF8, "application/json");
+            using (HttpResponseMessage httpres = await client.PostAsync(url, content)) 
+            {
+                if (httpres.IsSuccessStatusCode)
+                {
+                    return true;
+                }
+            };
+
+            return false;
+        }
+
+        public static async Task<bool> SendSingleEmailUsingHttpClient(MessageModel msgModel, SenderSettings sender)
+        {
+            HttpClient client = InitializeHttpClient();
+            string url = $"https://cdacollections.projectdriveng.com.ng/api/job/sendoneemail";
+            //string url = $"https://localhost:44378/api/job/sendoneemail";
+            MessageObject item = new MessageObject { Message = msgModel, Settings = sender };
+            string serialized = JsonConvert.SerializeObject(item);
+            StringContent content = new StringContent(serialized, Encoding.UTF8, "application/json");
+            using (HttpResponseMessage httpres = await client.PostAsync(url, content))
+            {
+                if (httpres.IsSuccessStatusCode)
+                {
+                    return true;
+                }
+            };
+
+            return false;
+        }
+
+
+        public class MultipleMessageObject
+        {
+            public List<MessageModel> Messages { get; set; }
+            public SenderSettings Settings { get; set; }
+        }
+
+        public class MessageObject
+        {
+            public MessageModel Message { get; set; }
+            public SenderSettings Settings { get; set; }
+        }
+
         #region Private Method
         private static string RefineTemplateMessage(string htmlTemplate, MessageModel msg)
         {

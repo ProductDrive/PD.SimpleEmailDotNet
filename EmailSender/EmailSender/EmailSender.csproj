@@ -10,11 +10,12 @@
     <Product>Product Drive Email Sender</Product>
     <Description>An open source outbound-only email services</Description>
     <Copyright>2023</Copyright>
-    <PackageProjectUrl>https://productdrive.com.ng</PackageProjectUrl>
+    <PackageProjectUrl>https://afeprdemailsender.projectdriveng.com.ng/Connection</PackageProjectUrl>
     <PackageTags>EmailSender Email Productdrive</PackageTags>
     <RepositoryUrl>https://github.com/ProductDrive/PD.SimpleEmailDotNet</RepositoryUrl>
     <PackageReleaseNotes>Send your email with ease</PackageReleaseNotes>
-    <Version>1.0.0</Version>
+    <Version>2.1.2</Version>
+    <NeutralLanguage></NeutralLanguage>
   </PropertyGroup>
 
   <ItemGroup>
@@ -25,7 +26,7 @@
   </ItemGroup>
 
 	<ItemGroup>
-		<None Include="docs\README.md" Pack="true" PackagePath="\"/>
+		<None Include="docs\README.md" Pack="true" PackagePath="\" />
 	</ItemGroup>
 
 </Project>

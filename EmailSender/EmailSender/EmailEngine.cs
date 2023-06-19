@@ -169,7 +169,7 @@ namespace PD.EmailSender.Helpers
             try
             {
 
-                smtpClient.Connect(details.Domain, details.Ports.First(), MailKit.Security.SecureSocketOptions.Auto);
+                smtpClient.Connect(details.Domain, details.Ports.First(), false);
                 smtpClient.Authenticate(emailaddress, password);
                 return true;
             }
