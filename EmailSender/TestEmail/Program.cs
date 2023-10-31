@@ -40,7 +40,7 @@ namespace TestEmail
 
             var tt = new MessageModel
             {
-                EmailAddresses = new string[] { "afeexclusive@gmail.com" },
+                EmailAddresses = new string[] { "tobbyumoh@gmail.com" },
                 //Cc = new string[] { "afeexclusive@gmail.com" },
                 EmailDisplayName = "Afe Personal",
                 Subject = "Kunle Email",
@@ -70,10 +70,10 @@ namespace TestEmail
             // "afee@productdrive.com.ng", "Afe@#40re_0"
             //"admin@projectdriveng.com.ng", "nimda9876@Elo"
             //mail.projectdriveng.com.ng`
-
+            var body = SendMail.GetTemplateAsStringAsync("afek4132", "welcom").Result;
             //var aa = SendMail.SendSingleEmail(ss, "templateone").Result;
             //var bb = SendMail.AuthenticateSenderDomain("afee@productdrive.com.ng", "Afe@#40re_0", "productdrive.com.ng", 465).Result;
-            var bb = SendMail.AuthenticateSenderDomain("info.admission@elizadeuniversity.edu.ng", "Afe@#40re_0").Result;
+            var bb = SendMail.AuthenticateSenderDomain("tobby@finnitech.com", "XiCfBO2GkkSX15VJio").Result;
             //var initialJson = File.ReadAllText($"C:/Users/Public/Documents/PD.SimpleEmailDotNet/EmailSender/TestEmail/commondomainserver.json");
             //var bb = SendMail.AuthenticateSenderDomain("admin@projectdriveng.com.ng", "nimda9876@Elo").Result;
             //var send = SendMail.SendSingleEmail(ss, bb.Settings, "templateone").Result;
@@ -82,7 +82,7 @@ namespace TestEmail
             //var bb = SendMail.AuthenticateSenderDomain("admission@elizadeuniversity.edu.ng", "Pass001.@", "elizadeuniversity.edu.ng", 0).Result;
             //var res = SendMail.SendMultipleEmail(new List<MessageModel>() { ss, tt, uu }, bb.Settings);
             var res = SendMail.SendSingleEmailUsingHttpClient(tt, bb.Settings).Result;
-
+            var msgff = SendMail.GetTemplateAsStringAsync("Your_APIKey", "template_name").Result;
 
             Console.WriteLine($"{bb.IsAuthenticated}");
         }

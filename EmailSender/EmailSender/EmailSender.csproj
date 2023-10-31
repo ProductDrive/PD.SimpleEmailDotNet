@@ -13,8 +13,11 @@
     <PackageProjectUrl>https://afeprdemailsender.projectdriveng.com.ng/Connection</PackageProjectUrl>
     <PackageTags>EmailSender Email Productdrive</PackageTags>
     <RepositoryUrl>https://github.com/ProductDrive/PD.SimpleEmailDotNet</RepositoryUrl>
-    <PackageReleaseNotes>Send your email with ease</PackageReleaseNotes>
-    <Version>2.1.2</Version>
+    <PackageReleaseNotes>Email template for developers (html)
+- free templates
+- custom templates
+-use http request</PackageReleaseNotes>
+    <Version>2.2.1</Version>
     <NeutralLanguage></NeutralLanguage>
   </PropertyGroup>
 

@@ -28,7 +28,7 @@ namespace PD.EmailSender.Helpers
             try
             {
                 HttpClient client = InitializeHttpClient();
-                string url = $"https://cdacollections.projectdriveng.com.ng/api/Job?filename={templateName}";
+                string url = $"https://estatecollections.projectdriveng.com.ng/api/Job?filename={templateName}";
                 HttpResponseMessage httpResponse = await client.GetAsync(url);
                 if (httpResponse.IsSuccessStatusCode)
                 {
@@ -45,7 +45,23 @@ namespace PD.EmailSender.Helpers
                 return false;
             }
         }
-              
+
+        public static async Task<string> GetTemplateAsStringAsync(string apiKey, string templateName)
+        {
+            HttpClient client = InitializeHttpClient();
+            string filename = apiKey + templateName;
+            string url = $"https://estatecollections.projectdriveng.com.ng/api/Job?filename={filename}";
+            //string url = $"https://localhost:44378/api/job?filename={filename}";
+            HttpResponseMessage httpResponse = await client.GetAsync(url);
+            if (httpResponse.IsSuccessStatusCode)
+            {
+                ResponseModel result = JsonConvert.DeserializeObject<ResponseModel>(await httpResponse.Content.ReadAsStringAsync());
+                string rawMsg = result.ReturnObj.ToString();
+                return rawMsg;
+            }
+            return "";
+        }
+
         public static async Task<(bool IsAuthenticated, SenderSettings Settings)> AuthenticateSenderDomain(string emailaddress, string password, string domain = "", int port = 0)
         {
             try
@@ -65,7 +81,7 @@ namespace PD.EmailSender.Helpers
                 {
                     //recieve json from API
                     HttpClient client = InitializeHttpClient();
-                    HttpResponseMessage httpResponse = await client.GetAsync($"https://cdacollections.projectdriveng.com.ng/api/job/defaultdomains");
+                    HttpResponseMessage httpResponse = await client.GetAsync($"https://estatecollections.projectdriveng.com.ng/api/job/defaultdomains");
                     if (httpResponse.IsSuccessStatusCode)
                     {
                         ResponseModel result = JsonConvert.DeserializeObject<ResponseModel>(await httpResponse.Content.ReadAsStringAsync());
@@ -81,7 +97,7 @@ namespace PD.EmailSender.Helpers
                     HttpClient client = InitializeHttpClient();
                     foreach (var item in authenticatedSettings)
                     {
-                        string url = $"https://cdacollections.projectdriveng.com.ng/api/job/postemailsettingsobj";
+                        string url = $"https://estatecollections.projectdriveng.com.ng/api/job/postemailsettingsobj";
                         item.Password = EncryptPassword(item.Password);
                         string serialized = JsonConvert.SerializeObject(item);
                         StringContent content = new StringContent(serialized, Encoding.UTF8, "application/json");
@@ -103,7 +119,7 @@ namespace PD.EmailSender.Helpers
         public static async Task<bool> SendMultipleEmailUsingHttpClient(List<MessageModel> msgModel, SenderSettings sender)
         {
             HttpClient client = InitializeHttpClient();
-            string url = $"https://cdacollections.projectdriveng.com.ng/api/job/sendmanyemail";
+            string url = $"https://estatecollections.projectdriveng.com.ng/api/job/sendmanyemail";
             MultipleMessageObject item = new MultipleMessageObject { Messages =  msgModel, Settings = sender };
            string serialized = JsonConvert.SerializeObject(item);
             StringContent content = new StringContent(serialized, Encoding.UTF8, "application/json");
@@ -121,7 +137,7 @@ namespace PD.EmailSender.Helpers
         public static async Task<bool> SendSingleEmailUsingHttpClient(MessageModel msgModel, SenderSettings sender)
         {
             HttpClient client = InitializeHttpClient();
-            string url = $"https://cdacollections.projectdriveng.com.ng/api/job/sendoneemail";
+            string url = $"https://estatecollections.projectdriveng.com.ng/api/job/sendoneemail";
             //string url = $"https://localhost:44378/api/job/sendoneemail";
             MessageObject item = new MessageObject { Message = msgModel, Settings = sender };
             string serialized = JsonConvert.SerializeObject(item);
@@ -168,7 +184,7 @@ namespace PD.EmailSender.Helpers
         private static async Task<SenderSettings> CheckIfAuthenticated(string email)
         {
             HttpClient client = InitializeHttpClient();
-            HttpResponseMessage httpResponse = await client.GetAsync($"https://cdacollections.projectdriveng.com.ng/api/Job/mysendersettings?email={email}");
+            HttpResponseMessage httpResponse = await client.GetAsync($"https://estatecollections.projectdriveng.com.ng/api/Job/mysendersettings?email={email}");
             if (!httpResponse.IsSuccessStatusCode)
             {
                 return null;
@@ -187,7 +203,7 @@ namespace PD.EmailSender.Helpers
         {
             HttpClient client = new HttpClient();
             //client.BaseAddress = new Uri("https://localhost:44392/");
-            client.BaseAddress = new Uri("https://cdacollections.projectdriveng.com.ng/api/");
+            client.BaseAddress = new Uri("https://estatecollections.projectdriveng.com.ng/api/");
             client.DefaultRequestHeaders.Accept.Clear();
             client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
             return client;
