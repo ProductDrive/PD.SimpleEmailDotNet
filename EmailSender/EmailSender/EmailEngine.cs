@@ -60,7 +60,7 @@ namespace PD.EmailSender.Helpers
             CommonHosts anonymuosdomain = new CommonHosts
             {
                 Domain = emailaddress.Split("@")[1],
-                Ports = new int[] { 0, 465, 587, 2525, 25 },
+                Ports = Config.GetPorts(), //new int[] { 0, 465, 587, 2525, 25 },
                 ServerType = "anon",
                 ServiceName = "Custom"
             };
@@ -184,7 +184,6 @@ namespace PD.EmailSender.Helpers
             SmtpClient smtpClient = new SmtpClient();
             try
             {
-                //projectdriveng.com.ng
                 smtpClient.Connect(sender.Domain, sender.Port, MailKit.Security.SecureSocketOptions.Auto);
                 smtpClient.Authenticate(sender.Email, sender.Password);
                 smtpClient.Send(message);

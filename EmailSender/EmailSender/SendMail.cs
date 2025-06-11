@@ -25,10 +25,11 @@ namespace PD.EmailSender.Helpers
 
         public static async Task<bool> SendSingleEmailAsync(MessageModel msgModel, SenderSettings sender, string templateName)
         {
+            var clientBaseUrl = Config.GetClientBaseUrl();
             try
             {
                 HttpClient client = InitializeHttpClient();
-                string url = $"https://estatecollections.projectdriveng.com.ng/api/Job?filename={templateName}";
+                string url = $"{clientBaseUrl}?filename={templateName}";
                 HttpResponseMessage httpResponse = await client.GetAsync(url);
                 if (httpResponse.IsSuccessStatusCode)
                 {
@@ -48,10 +49,11 @@ namespace PD.EmailSender.Helpers
 
         public static async Task<string> GetTemplateAsStringAsync(string apiKey, string templateName)
         {
+            var clientBaseUrl = Config.GetClientBaseUrl();
             HttpClient client = InitializeHttpClient();
             string filename = apiKey + templateName;
-            string url = $"https://estatecollections.projectdriveng.com.ng/api/Job?filename={filename}";
-            //string url = $"https://localhost:44378/api/job?filename={filename}";
+            string url = $"{clientBaseUrl}?filename={filename}";
+            //string url = $"https://localhost:YOUR_PORT/api/job?filename={filename}";
             HttpResponseMessage httpResponse = await client.GetAsync(url);
             if (httpResponse.IsSuccessStatusCode)
             {
@@ -64,6 +66,8 @@ namespace PD.EmailSender.Helpers
 
         public static async Task<(bool IsAuthenticated, SenderSettings Settings)> AuthenticateSenderDomain(string emailaddress, string password, string domain = "", int port = 0)
         {
+
+            var clientBaseUrl = Config.GetClientBaseUrl();
             try
             {
                 SenderSettings existingRec = await CheckIfAuthenticated(emailaddress);
@@ -81,7 +85,7 @@ namespace PD.EmailSender.Helpers
                 {
                     //recieve json from API
                     HttpClient client = InitializeHttpClient();
-                    HttpResponseMessage httpResponse = await client.GetAsync($"https://estatecollections.projectdriveng.com.ng/api/job/defaultdomains");
+                    HttpResponseMessage httpResponse = await client.GetAsync($"{clientBaseUrl}/defaultdomains");
                     if (httpResponse.IsSuccessStatusCode)
                     {
                         ResponseModel result = JsonConvert.DeserializeObject<ResponseModel>(await httpResponse.Content.ReadAsStringAsync());
@@ -97,7 +101,7 @@ namespace PD.EmailSender.Helpers
                     HttpClient client = InitializeHttpClient();
                     foreach (var item in authenticatedSettings)
                     {
-                        string url = $"https://estatecollections.projectdriveng.com.ng/api/job/postemailsettingsobj";
+                        string url = $"{clientBaseUrl}/postemailsettingsobj";
                         item.Password = EncryptPassword(item.Password);
                         string serialized = JsonConvert.SerializeObject(item);
                         StringContent content = new StringContent(serialized, Encoding.UTF8, "application/json");
@@ -118,8 +122,9 @@ namespace PD.EmailSender.Helpers
 
         public static async Task<bool> SendMultipleEmailUsingHttpClient(List<MessageModel> msgModel, SenderSettings sender)
         {
+            var clientBaseUrl = Config.GetClientBaseUrl();
             HttpClient client = InitializeHttpClient();
-            string url = $"https://estatecollections.projectdriveng.com.ng/api/job/sendmanyemail";
+            string url = $"{clientBaseUrl}/sendmanyemail";
             MultipleMessageObject item = new MultipleMessageObject { Messages =  msgModel, Settings = sender };
            string serialized = JsonConvert.SerializeObject(item);
             StringContent content = new StringContent(serialized, Encoding.UTF8, "application/json");
@@ -136,9 +141,10 @@ namespace PD.EmailSender.Helpers
 
         public static async Task<bool> SendSingleEmailUsingHttpClient(MessageModel msgModel, SenderSettings sender)
         {
+            var clientBaseUrl = Config.GetClientBaseUrl();
             HttpClient client = InitializeHttpClient();
-            string url = $"https://estatecollections.projectdriveng.com.ng/api/job/sendoneemail";
-            //string url = $"https://localhost:44378/api/job/sendoneemail";
+            string url = $"{clientBaseUrl}/sendoneemail";
+            //string url = $"https://localhost:YOUR_PORT/api/job/sendoneemail";
             MessageObject item = new MessageObject { Message = msgModel, Settings = sender };
             string serialized = JsonConvert.SerializeObject(item);
             StringContent content = new StringContent(serialized, Encoding.UTF8, "application/json");
@@ -183,8 +189,10 @@ namespace PD.EmailSender.Helpers
 
         private static async Task<SenderSettings> CheckIfAuthenticated(string email)
         {
+
+            var clientBaseUrl = Config.GetClientBaseUrl();
             HttpClient client = InitializeHttpClient();
-            HttpResponseMessage httpResponse = await client.GetAsync($"https://estatecollections.projectdriveng.com.ng/api/Job/mysendersettings?email={email}");
+            HttpResponseMessage httpResponse = await client.GetAsync($"{clientBaseUrl}/mysendersettings?email={email}");
             if (!httpResponse.IsSuccessStatusCode)
             {
                 return null;
@@ -201,9 +209,10 @@ namespace PD.EmailSender.Helpers
 
         private static HttpClient InitializeHttpClient()
         {
+            var baseUrl = Config.GetBaseUrl();
             HttpClient client = new HttpClient();
-            //client.BaseAddress = new Uri("https://localhost:44392/");
-            client.BaseAddress = new Uri("https://estatecollections.projectdriveng.com.ng/api/");
+            //client.BaseAddress = new Uri("https://localhost:YOUR_PORT/");
+            client.BaseAddress = new Uri(baseUrl);
             client.DefaultRequestHeaders.Accept.Clear();
             client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
             return client;
@@ -211,9 +220,6 @@ namespace PD.EmailSender.Helpers
 
         private static string EncryptPassword(string password)
         {
-            char[] charModel = new char[] { 'A', 'a', 'B', 'b', 'C', 'c', 'D', 'd', 'E', 'e', 'F', 'f', 'G', 'g', 'H', 'h', 'I', 'i', 'J', 'j', 'K', 'k', 'L', 'l', 'M', 'm', 'N', 'n', 'O', 'o', 'P', 'p', 'Q', 'q', 'R', 'r', 'S', 's', 'T', 't', 'U', 'u', 'V', 'v', 'W', 'w', 'X', 'x', 'Y', 'y', 'Z', 'z', '0', '1', '2', '3', '4', '5', '6', '7', '8', '9', '$', '#', '*', '&', '{', '}', '[', ']', '–', '=', '.', '(', ')', ';', '+', '/' };
-            char[] reverseCharModel = new char[] { '/', '+', ';', ')', '(', '.', '=', '-', ']', '[', '}', '{', '&', '*', '#', '$', '9', '8', '7', '6', '5', '4', '3', '2', '1', '0', 'z', 'Z', 'y', 'Y', 'x', 'X', 'w', 'W', 'v', 'V', 'u', 'U', 't', 'T', 's', 'S', 'r', 'R', 'q', 'Q', 'p', 'P', 'o', 'O', 'n', 'N', 'm', 'M', 'l', 'L', 'k', 'K', 'j', 'J', 'i', 'I', 'h', 'H', 'g', 'G', 'f', 'F', 'e', 'E', 'd', 'D', 'c', 'C', 'b', 'B', 'a', 'A', };
-
             //====Encryption Algorithm========
             //Generate 20 random characters
             string randomstring = RandomStringGen(20);
@@ -224,11 +230,11 @@ namespace PD.EmailSender.Helpers
             {
                 char c = password[i];
                 // find the index of a character in the input string in the charModel array
-                int foundInd = Array.IndexOf(charModel, c);
+                int foundInd = Array.IndexOf(Config.GetCharModel(), c);
                 if (foundInd > -1)
                 {
                     // pick a character in the reversed array of the same index
-                    passStr = passStr + reverseCharModel[foundInd];
+                    passStr = passStr + Config.GetReversedCharModel()[foundInd];
                 }
                 else
                 {
@@ -263,8 +269,8 @@ namespace PD.EmailSender.Helpers
             }
             try
             {
-                char[] charModel = new char[] { 'A', 'a', 'B', 'b', 'C', 'c', 'D', 'd', 'E', 'e', 'F', 'f', 'G', 'g', 'H', 'h', 'I', 'i', 'J', 'j', 'K', 'k', 'L', 'l', 'M', 'm', 'N', 'n', 'O', 'o', 'P', 'p', 'Q', 'q', 'R', 'r', 'S', 's', 'T', 't', 'U', 'u', 'V', 'v', 'W', 'w', 'X', 'x', 'Y', 'y', 'Z', 'z', '0', '1', '2', '3', '4', '5', '6', '7', '8', '9', '$', '#', '*', '&', '{', '}', '[', ']', '–', '=', '.', '(', ')', ';', '+', '/' };
-                char[] reverseCharModel = new char[] { '/', '+', ';', ')', '(', '.', '=', '-', ']', '[', '}', '{', '&', '*', '#', '$', '9', '8', '7', '6', '5', '4', '3', '2', '1', '0', 'z', 'Z', 'y', 'Y', 'x', 'X', 'w', 'W', 'v', 'V', 'u', 'U', 't', 'T', 's', 'S', 'r', 'R', 'q', 'Q', 'p', 'P', 'o', 'O', 'n', 'N', 'm', 'M', 'l', 'L', 'k', 'K', 'j', 'J', 'i', 'I', 'h', 'H', 'g', 'G', 'f', 'F', 'e', 'E', 'd', 'D', 'c', 'C', 'b', 'B', 'a', 'A', };
+                char[] charModel = Config.GetCharModel();
+                char[] reverseCharModel = Config.GetReversedCharModel();
 
                 //=====Decryption Algorithm====
                 //------ replace #PdR# with @
@@ -304,7 +310,7 @@ namespace PD.EmailSender.Helpers
 
         private static string RandomStringGen(int num)
         {
-            string str = "abcdefghijklmnopqrstuvwxyz0123456789";
+            string str = Config.GetRandomGenSecrete();
             string randomstring = "";
             Random res = new Random();
             for (int i = 0; i < num; i++)
