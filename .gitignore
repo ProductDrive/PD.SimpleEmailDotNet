@@ -352,3 +352,6 @@ MigrationBackup/
 
 # Private Files
 /EmailSender/TestEmail/
+/EmailSender/TestEmail/Testcode.txt
+/EmailSender/TestEmail/commondomainserver.json
+/EmailSender/TestEmail/sampletemplate.html
