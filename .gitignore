@@ -355,3 +355,4 @@ MigrationBackup/
 /EmailSender/TestEmail/Testcode.txt
 /EmailSender/TestEmail/commondomainserver.json
 /EmailSender/TestEmail/sampletemplate.html
+/EmailSender/EmailSender/Secretes.cs

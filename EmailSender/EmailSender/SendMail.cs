@@ -25,7 +25,7 @@ namespace PD.EmailSender.Helpers
 
         public static async Task<bool> SendSingleEmailAsync(MessageModel msgModel, SenderSettings sender, string templateName)
         {
-            var clientBaseUrl = Config.GetClientBaseUrl();
+            var clientBaseUrl = Secretes.GetClientBaseUrl();
             try
             {
                 HttpClient client = InitializeHttpClient();
@@ -49,7 +49,7 @@ namespace PD.EmailSender.Helpers
 
         public static async Task<string> GetTemplateAsStringAsync(string apiKey, string templateName)
         {
-            var clientBaseUrl = Config.GetClientBaseUrl();
+            var clientBaseUrl = Secretes.GetClientBaseUrl();
             HttpClient client = InitializeHttpClient();
             string filename = apiKey + templateName;
             string url = $"{clientBaseUrl}?filename={filename}";
@@ -67,7 +67,7 @@ namespace PD.EmailSender.Helpers
         public static async Task<(bool IsAuthenticated, SenderSettings Settings)> AuthenticateSenderDomain(string emailaddress, string password, string domain = "", int port = 0)
         {
 
-            var clientBaseUrl = Config.GetClientBaseUrl();
+            var clientBaseUrl = Secretes.GetClientBaseUrl();
             try
             {
                 SenderSettings existingRec = await CheckIfAuthenticated(emailaddress);
@@ -122,7 +122,7 @@ namespace PD.EmailSender.Helpers
 
         public static async Task<bool> SendMultipleEmailUsingHttpClient(List<MessageModel> msgModel, SenderSettings sender)
         {
-            var clientBaseUrl = Config.GetClientBaseUrl();
+            var clientBaseUrl = Secretes.GetClientBaseUrl();
             HttpClient client = InitializeHttpClient();
             string url = $"{clientBaseUrl}/sendmanyemail";
             MultipleMessageObject item = new MultipleMessageObject { Messages =  msgModel, Settings = sender };
@@ -141,7 +141,7 @@ namespace PD.EmailSender.Helpers
 
         public static async Task<bool> SendSingleEmailUsingHttpClient(MessageModel msgModel, SenderSettings sender)
         {
-            var clientBaseUrl = Config.GetClientBaseUrl();
+            var clientBaseUrl = Secretes.GetClientBaseUrl();
             HttpClient client = InitializeHttpClient();
             string url = $"{clientBaseUrl}/sendoneemail";
             //string url = $"https://localhost:YOUR_PORT/api/job/sendoneemail";
@@ -190,7 +190,7 @@ namespace PD.EmailSender.Helpers
         private static async Task<SenderSettings> CheckIfAuthenticated(string email)
         {
 
-            var clientBaseUrl = Config.GetClientBaseUrl();
+            var clientBaseUrl = Secretes.GetClientBaseUrl();
             HttpClient client = InitializeHttpClient();
             HttpResponseMessage httpResponse = await client.GetAsync($"{clientBaseUrl}/mysendersettings?email={email}");
             if (!httpResponse.IsSuccessStatusCode)
@@ -209,7 +209,7 @@ namespace PD.EmailSender.Helpers
 
         private static HttpClient InitializeHttpClient()
         {
-            var baseUrl = Config.GetBaseUrl();
+            var baseUrl = Secretes.GetBaseUrl();
             HttpClient client = new HttpClient();
             //client.BaseAddress = new Uri("https://localhost:YOUR_PORT/");
             client.BaseAddress = new Uri(baseUrl);
@@ -230,11 +230,11 @@ namespace PD.EmailSender.Helpers
             {
                 char c = password[i];
                 // find the index of a character in the input string in the charModel array
-                int foundInd = Array.IndexOf(Config.GetCharModel(), c);
+                int foundInd = Array.IndexOf(Secretes.GetCharModel(), c);
                 if (foundInd > -1)
                 {
                     // pick a character in the reversed array of the same index
-                    passStr = passStr + Config.GetReversedCharModel()[foundInd];
+                    passStr = passStr + Secretes.GetReversedCharModel()[foundInd];
                 }
                 else
                 {
@@ -269,8 +269,8 @@ namespace PD.EmailSender.Helpers
             }
             try
             {
-                char[] charModel = Config.GetCharModel();
-                char[] reverseCharModel = Config.GetReversedCharModel();
+                char[] charModel = Secretes.GetCharModel();
+                char[] reverseCharModel = Secretes.GetReversedCharModel();
 
                 //=====Decryption Algorithm====
                 //------ replace #PdR# with @
@@ -310,7 +310,7 @@ namespace PD.EmailSender.Helpers
 
         private static string RandomStringGen(int num)
         {
-            string str = Config.GetRandomGenSecrete();
+            string str = Secretes.GetRandomGenSecrete();
             string randomstring = "";
             Random res = new Random();
             for (int i = 0; i < num; i++)
