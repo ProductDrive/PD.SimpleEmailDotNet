@@ -11,26 +11,15 @@ namespace TestEmail
     {
         static void Main(string[] args)
         {
-            //string htmlBody;
-            //using (var streamReader = File.OpenText("C:/Users/Public/Documents/PD.SimpleEmailDotNet/EmailSender/TestEmail/sampletemplate.html"))
-            //{
-            //    htmlBody = streamReader.ReadToEnd();
-            //}
 
-            //var initialJson = File.ReadAllText($"C:/Users/Public/Documents/PD.SimpleEmailDotNet/EmailSender/TestEmail/json1.json"); //$"./Data/{file}.json" || C:\Users\Public\Documents\cdalevyappbackend\CDALevyApp\
-            //if (initialJson.Length > 15)
-            //{
-            //    List<HTMLTemplate> entityList = JsonConvert.DeserializeObject<List<HTMLTemplate>>(initialJson);
-
-            //}
-
-            var ss = new MessageModel
+            var emailMessage = new MessageModel
             {
-                EmailAddresses = new string[] { "adeoyetemitayo99@gmail.com" },
-                //Cc = new string[] { "afeexclusive@gmail.com" },
+                EmailAddresses = new string[] { "recipient_email" },
+                Cc = new string[] { "copy_recipient_email" },
+                Bcc = new string[] {"blind_copy_recipient_email"},
                 EmailDisplayName = "Afe Personal",
-                Subject = "Tayo Email",
-                Message = "Multiple email to multiple receivers. this is for Tayo",
+                Subject = "AFE Email Nuget testing",
+                Message = "Email message",
                 FacebookLink = "https://facebook.com/afekunle",
                 TwitterLink = "https://twitter.com/home",
                 CompanyLogoLink = "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTPvHnchdgM_GO49LDXDtdm5dOxXUQ5PfVtmQ&usqp=CAU",
@@ -38,53 +27,12 @@ namespace TestEmail
                 CopyrightYear = "2021"
             };
 
-            var tt = new MessageModel
-            {
-                EmailAddresses = new string[] { "tobbyumoh@gmail.com" },
-                //Cc = new string[] { "afeexclusive@gmail.com" },
-                EmailDisplayName = "Afe Personal",
-                Subject = "Kunle Email",
-                Message = "Multiple email to multiple receivers. this is for Kunle",
-                FacebookLink = "https://facebook.com/afekunle",
-                TwitterLink = "https://twitter.com/home",
-                CompanyLogoLink = "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTPvHnchdgM_GO49LDXDtdm5dOxXUQ5PfVtmQ&usqp=CAU",
-                CopyrightName = "PRODUCTDRIVE",
-                CopyrightYear = "2021"
-            };
+            var (isAuth, settings) = SendMail.AuthenticateSenderDomain("your_email_address", "email_password").Result;
 
-            var uu = new MessageModel
-            {
-                EmailAddresses = new string[] { "afegodiya@gmail.com" },
-                //Cc = new string[] { "afeexclusive@gmail.com" },
-                EmailDisplayName = "Afe Personal",
-                Subject = "Godiya Email",
-                Message = "Multiple email to multiple receivers. this is for Godiya",
-                FacebookLink = "https://facebook.com/afekunle",
-                TwitterLink = "https://twitter.com/home",
-                CompanyLogoLink = "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTPvHnchdgM_GO49LDXDtdm5dOxXUQ5PfVtmQ&usqp=CAU",
-                CopyrightName = "PRODUCTDRIVE",
-                CopyrightYear = "2021"
-            };
+            SendMail.SendSingleEmail(emailMessage, settings);
+            var emailTemplate = SendMail.GetTemplateAsStringAsync("Your_APIKey", "template_name").Result;
 
-            //"productdrive.com.ng", 465, true
-            // "afee@productdrive.com.ng", "Afe@#40re_0"
-            //"admin@projectdriveng.com.ng", "nimda9876@Elo"
-            //mail.projectdriveng.com.ng`
-            /////////var body = SendMail.GetTemplateAsStringAsync("afek4132", "welcom").Result;
-            //var aa = SendMail.SendSingleEmail(ss, "templateone").Result;
-            //var bb = SendMail.AuthenticateSenderDomain("afee@productdrive.com.ng", "Afe@#40re_0", "productdrive.com.ng", 465).Result;
-            var bb = SendMail.AuthenticateSenderDomain("tobby@finnitech.com", "XiCfBO2GkkSX15VJio").Result;
-            //var initialJson = File.ReadAllText($"C:/Users/Public/Documents/PD.SimpleEmailDotNet/EmailSender/TestEmail/commondomainserver.json");
-            //var bb = SendMail.AuthenticateSenderDomain("admin@projectdriveng.com.ng", "nimda9876@Elo").Result;
-            //var send = SendMail.SendSingleEmail(ss, bb.Settings, "templateone").Result;
-            //var bb = SendMail.AuthenticateSenderDomain("afee@productdrive.com.ng", "Afe@#40re_0", initialJson);
-            // var bb = SendMail.AuthenticateSenderDomain("info@admission.elizadeuniversity.edu.ng", "nimda9876@Elo", "admission.elizadeuniversity.edu.ng", 465).Result;
-            //var bb = SendMail.AuthenticateSenderDomain("admission@elizadeuniversity.edu.ng", "Pass001.@", "elizadeuniversity.edu.ng", 0).Result;
-            //var res = SendMail.SendMultipleEmail(new List<MessageModel>() { ss, tt, uu }, bb.Settings);
-            var res = SendMail.SendSingleEmailUsingHttpClient(tt, bb.Settings).Result;
-            var msgff = SendMail.GetTemplateAsStringAsync("Your_APIKey", "template_name").Result;
-
-            Console.WriteLine($"{bb.IsAuthenticated}");
+            Console.WriteLine(isAuth);
         }
     }
 

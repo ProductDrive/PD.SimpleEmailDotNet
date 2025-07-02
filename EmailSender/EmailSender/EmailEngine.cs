@@ -60,7 +60,7 @@ namespace PD.EmailSender.Helpers
             CommonHosts anonymuosdomain = new CommonHosts
             {
                 Domain = emailaddress.Split("@")[1],
-                Ports = Config.GetPorts(), //new int[] { 0, 465, 587, 2525, 25 },
+                Ports = Secretes.GetPorts(), 
                 ServerType = "anon",
                 ServiceName = "Custom"
             };
